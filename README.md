@@ -5,21 +5,17 @@ PyUNO module which integrates frequently used methods in LibreOffice macro devel
 
 ## Usage
 Unzip and copy my_project in `.../Script/python` directory. 
-
-`
-
+   
     my_project/                         > project root dir
-        src/                            > source dir
-            pythonpath/
-                 unostarter.py          
+            src/                        > source dir
+                pythonpath/
+                    unostarter.py          
             Test_my_project.py          > write your code here
-       
-`      
+
+Read the instructions in file `Test_my_project.py` and adapt to your needs.
 
 ## Frequently used methods in office context
 
-`
-    
     getContext()  
     
     getDesktop()
@@ -35,10 +31,9 @@ Unzip and copy my_project in `.../Script/python` directory.
     filePathToUrl(path)  
     
     fileUrlToPath(url)
-`        
+       
     
 ## Frequently used methods in development context
-`
 
     callMRI(obj=None)
     
@@ -48,12 +43,8 @@ Unzip and copy my_project in `.../Script/python` directory.
     
     showInterfaceDoc(object)
     
-`
-
 ## Basic GUI boxes for interaction with a user
-
-`
-    
+ 
     SelectBox(message="Select one item", title="SelectBox", choices=['a', 'b', 'c'])
     
     OptionBox(message="Select multiple items", title="OptionBox", choices=['a', 'b', 'c'])  
@@ -71,7 +62,7 @@ Unzip and copy my_project in `.../Script/python` directory.
     MessageBox(message="Message", title="MessageBox", messageType=INFOBOX, messageButtons=BUTTONS_OK)   
     
     MBWizard()
-`
+
     
     
     

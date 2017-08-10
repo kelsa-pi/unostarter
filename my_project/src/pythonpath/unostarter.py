@@ -23,6 +23,7 @@ import unohelper
 from com.sun.star.awt import XActionListener
 from com.sun.star.task import XJobExecutor
 from com.sun.star.uno import RuntimeException
+from com.sun.star.connection import NoConnectException
 
 from com.sun.star.awt.MessageBoxType import \
     MESSAGEBOX, INFOBOX, WARNINGBOX, ERRORBOX, QUERYBOX
@@ -44,7 +45,7 @@ from com.sun.star.reflection.ParamMode import \
 HOST = 'localhost'
 PORT = 2002
 
-__all__ = ['StartOffice', 'ConnectOffice', 'Office', 'Gui', 'Inspector']
+__all__ = ['Office', 'Gui', 'Inspector']
 
 
 def _mode_to_str(mode):
@@ -87,7 +88,7 @@ def ConnectOffice(host=HOST, port=PORT, pipe=None, context=None):
             url = _get_connection_url(host, port, pipe)
             remote = localContext.ServiceManager.createInstanceWithContext("com.sun.star.bridge.UnoUrlResolver", localContext)
             conn = remote.resolve(url)
-        except:
+        except NoConnectException:
             # Connection inside the Office
             conn = localContext
     else:
@@ -636,73 +637,68 @@ class Inspector:
         self.smgr = self.ctx.ServiceManager
         self.desktop = self.ctx.getValueByName('/singletons/com.sun.star.frame.theDesktop')
         self.introspection = self.ctx.getValueByName("/singletons/com.sun.star.beans.theIntrospection")
+        self.reflection = self.ctx.getValueByName("/singletons/com.sun.star.reflection.theCoreReflection")
         self.documenter = self.ctx.getValueByName('/singletons/com.sun.star.util.theServiceDocumenter')
 
-    def _inspectProperties(self, object, items=None):
+    def _inspectProperties(self, object):
         """Inspect properties
 
         :param object: object to inspect
         "param items: list method items
         """
 
-        if items is None:
-            items = []
-
-        all = ""
-        part = ""
-
-        MP = {}
+        P = {}
         try:
             inspector = self.introspection.inspect(object)
             # properties
             properties = inspector.getProperties(PROPERTY_CONCEPT_ALL)
-            for ii in properties:
+            for property in properties:
                 try:
-                    v = object.getPropertyValue(str(ii.Name))
+                    # name
+                    p_name = str(property.Name)
+                    P[p_name] = {}
+                    typ = str(property.Type)
+                    typ = typ.split('(')
+                    typ = typ[0].replace('<Type instance ', '')
+                    typ = typ.replace('com.sun.star', '')
+                    P[p_name]['type'] = typ.strip() 
+                    v = object.getPropertyValue(p_name)
                     t = str(v)
                     if t.startswith("pyuno object"):
                         v = "()"
                     if t.startswith("("):
                         v = "()"
-
-                    MP['{:<35}'.format(str(ii.Name))] = str(v)
+                    
+                    P[p_name]['repr'] = str(v)
                 except:
-                    MP['{:<35}'.format(str(ii.Name))] = "()"
 
-            for key, value in sorted(MP.items()):
-                if key.strip() in items:
-                    part = part + key + "  " + value + "\n"
-                else:
-                    all = all + key + "  " + value + "\n"
+                    P[p_name]['repr'] = "()"
+
         except:
             pass
 
-        if len(items) == 0:
-            return all
-        else:
-            return part
+        return P
 
-    def _inspectMethods(self, object, items=None):
+    def _inspectMethods(self, object):
         """Inspect Methods
 
         :param object:
         :param items; list
         """
-
-        if items is None:
-            items = []
-
-        all = ""
-        part = ""
-
-        MP = {}
+        M = {}
         try:
             inspector = self.introspection.inspect(object)
             # methods
             methods = inspector.getMethods(METHOD_CONCEPT_ALL)
-            for m in methods:
-                args = m.ParameterTypes
-                infos = m.ParameterInfos
+            for method in methods:
+                # name
+                m_name = str(method.Name)
+                M[m_name] = {}
+                # typ = str(method.getReturnType())
+                M[m_name]['type'] = 'PyUNO_callable'
+                # repr
+                args = method.ParameterTypes
+                infos = method.ParameterInfos
                 params = "("
                 for i in range(0, len(args)):
                     params = params + _mode_to_str(infos[i].aMode) + " " + str(args[i].Name) + " " + str(infos[i].aName) + ", "
@@ -711,21 +707,12 @@ class Inspector:
                 if params == "()":
                     params = "()"
 
-                MP['{:<35}'.format(str(m.Name))] = str(params)
-
-            for key, value in sorted(MP.items()):
-                if key.strip() in items:
-                    part = part + key + "  " + value + "\n"
-                else:
-                    all = all + key + "  " + value + "\n"
-
+                M[m_name]['repr'] = str(params)
         except:
             pass
+        
+        return M
 
-        if len(items) == 0:
-            return all
-        else:
-            return part
 
     def callMRI(self, obj=None):
         """Create an instance of MRI inspector and inspect the given object"""
@@ -737,7 +724,7 @@ class Inspector:
         except:
             raise RuntimeException("\n MRI is not installed", self.ctx)
 
-    def inspect(self, object, items=None):
+    def inspect(self, object, item=None, console='no'):
         """Inspect object
 
         :param object: object to inspect
@@ -745,13 +732,31 @@ class Inspector:
 
         Return properties and methods
         """
-        if items is None:
-            items = []
-        result = ''
-        p = self._inspectProperties(object, items)
-        m = self._inspectMethods(object, items)
-        result = result + p + m
-        return result
+        p = self._inspectProperties(object)
+        m = self._inspectMethods(object)
+        
+        context = {}
+        if item is None:
+            context.update(sorted(p.items()))
+            context.update(sorted(m.items()))
+        else:
+            for k,v in p.items():
+                if k in item:
+                    context[k] = v
+            for k,v in m.items():
+                if k in item:
+                    context[k] = v
+                    
+        if console == 'no':
+            return context
+        
+        if console == 'yes':
+            for key, value in sorted(context.items()):
+                for tp, rep in value.items():
+                    t = context[key]['type']
+                    r = context[key]['repr']
+                print('{:<35}'.format(key) +  '{:<35}'.format(t) + r)
+
 
     def showServiceDocs(self, object):
         """Open browser to show service documentation
@@ -766,7 +771,13 @@ class Inspector:
         return self.documenter.showInterfaceDoc(object)
 
 if __name__ == "__main__":
-    Gui.MBWizard()
+    try:
+        office = Office()
+        inspector = Inspector()
+        print('\nConected as client to remote soffice proces\n')
+    except:
+        print('Error: no conection')
+    #Gui.MBWizard()
 
 
 

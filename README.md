@@ -1,6 +1,7 @@
 # unostarter
 
-PyUNO module which integrates frequently used methods in LibreOffice macro development.
+Unostarter is a python module (PyUNO) which integrates frequently used methods in LibreOffice macro development. 
+Additionally, the module provides simple dialog boxes for interaction with a user.
 
 
 ## Usage
@@ -14,8 +15,10 @@ Unzip and copy my_project in `.../Script/python` directory.
 
 Read the instructions in file `Test_my_project.py` and adapt to your needs.
 
-## Frequently used methods in office context
+## Office context
 
+The class `Office` provides frequently used methods in office context
+    
     getContext()  
     
     getDesktop()
@@ -33,7 +36,10 @@ Read the instructions in file `Test_my_project.py` and adapt to your needs.
     fileUrlToPath(url)
        
     
-## Frequently used methods in development context
+## Object inspection
+
+The class `Inspector` provides frequently used methods in development context
+
 
     callMRI(obj=None)
     
@@ -43,7 +49,10 @@ Read the instructions in file `Test_my_project.py` and adapt to your needs.
     
     showInterfaceDoc(object)
     
-## Basic GUI boxes for interaction with a user
+## Basic GUI
+
+The class `Gui` provides basic GUI boxes for interaction with a user
+
  
     SelectBox(message="Select one item", title="SelectBox", choices=['a', 'b', 'c'])
     

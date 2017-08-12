@@ -24,26 +24,38 @@ from com.sun.star.awt import XActionListener
 from com.sun.star.task import XJobExecutor
 from com.sun.star.uno import RuntimeException
 from com.sun.star.connection import NoConnectException
-
 from com.sun.star.awt.MessageBoxType import \
-    MESSAGEBOX, INFOBOX, WARNINGBOX, ERRORBOX, QUERYBOX
+    MESSAGEBOX as _MESSAGEBOX, \
+    INFOBOX as _INFOBOX, \
+    WARNINGBOX as _WARNINGBOX, \
+    ERRORBOX as ERRORBOX, \
+    QUERYBOX as QUERYBOX
 from com.sun.star.awt.MessageBoxButtons import \
-    BUTTONS_OK, BUTTONS_OK_CANCEL, BUTTONS_YES_NO, \
-    BUTTONS_YES_NO_CANCEL, BUTTONS_RETRY_CANCEL, BUTTONS_ABORT_IGNORE_RETRY
+    BUTTONS_OK as _BUTTONS_OK, \
+    BUTTONS_OK_CANCEL as _BUTTONS_OK_CANCEL, \
+    BUTTONS_YES_NO as BUTTONS_YES_NO, \
+    BUTTONS_YES_NO_CANCEL as _BUTTONS_YES_NO_CANCEL, \
+    BUTTONS_RETRY_CANCEL as _BUTTONS_RETRY_CANCEL, \
+    BUTTONS_ABORT_IGNORE_RETRY as _BUTTONS_ABORT_IGNORE_RETRY
 from com.sun.star.awt.MessageBoxButtons import \
-    DEFAULT_BUTTON_OK, DEFAULT_BUTTON_CANCEL, DEFAULT_BUTTON_RETRY, \
-    DEFAULT_BUTTON_YES, DEFAULT_BUTTON_NO, DEFAULT_BUTTON_IGNORE
-from com.sun.star.beans.MethodConcept import ALL as METHOD_CONCEPT_ALL
-from com.sun.star.beans.PropertyConcept import ALL as PROPERTY_CONCEPT_ALL
-
+    DEFAULT_BUTTON_OK as _DEFAULT_BUTTON_OK, \
+    DEFAULT_BUTTON_CANCEL as _DEFAULT_BUTTON_CANCEL, \
+    DEFAULT_BUTTON_RETRY as _DEFAULT_BUTTON_RETRY, \
+    DEFAULT_BUTTON_YES as _DEFAULT_BUTTON_YES, \
+    DEFAULT_BUTTON_NO as _DEFAULT_BUTTON_NO, \
+    DEFAULT_BUTTON_IGNORE as _DEFAULT_BUTTON_IGNORE
+from com.sun.star.beans.MethodConcept import \
+    ALL as _METHOD_CONCEPT_ALL
+from com.sun.star.beans.PropertyConcept import \
+    ALL as _PROPERTY_CONCEPT_ALL
 from com.sun.star.reflection.ParamMode import \
-    IN as PARAM_MODE_IN, \
-    OUT as PARAM_MODE_OUT, \
-    INOUT as PARAM_MODE_INOUT
+    IN as _PARAM_MODE_IN, \
+    OUT as _PARAM_MODE_OUT, \
+    INOUT as _PARAM_MODE_INOUT
 
 # change if needed
-HOST = 'localhost'
-PORT = 2002
+_HOST = 'localhost'
+_PORT = 2002
 
 __all__ = ['Office', 'Gui', 'Inspector']
 
@@ -67,8 +79,9 @@ def _get_connection_url(host, port, pipe=None):
     return 'uno:{};urp;StarOffice.ComponentContext'.format(connection)
 
 
-def ConnectOffice(host=HOST, port=PORT, pipe=None, context=None):
+def ConnectOffice(host=_HOST, port=_PORT, pipe=None, context=None):
     """Connect LibreOffice
+    
     :param host: connect via socket, default 'localhost'
     :param port: connect via socket, default 2002
     :param pipe: connect via pipe, default None
@@ -107,42 +120,82 @@ class Office:
     """Frequently used methods in office context
     """
     def __init__(self, context=None):
+        
         if context:
             self.ctx = context
         else:
             self.ctx = ConnectOffice()
 
     def getContext(self):
+        """Get access to the component context
+        
+        Similar: 
+        XSCRIPTCONTEXT.getComponentContext()
+        """
         return self.ctx
 
     def getDesktop(self):
-        """Access to the desktop environment"""
+        """Get access to the desktop environment
+        
+        Similar: 
+        XSCRIPTCONTEXT.getDesktop()
+        """
         desktop = self.ctx.getValueByName('/singletons/com.sun.star.frame.theDesktop')
         return desktop
 
     def getDocument(self):
-        """Access to the current document"""
+        """Get access to the current document
+        
+        Similar: 
+        XSCRIPTCONTEXT.getDocument()
+        """
         return self.getDesktop().getCurrentComponent()
 
     def getSelection(self):
-        """Access to the the current selection"""
+        """Get access to the current selection
+        
+        Similar: 
+        XSCRIPTCONTEXT.getDocument().getSelection()
+        """
         return self.getDocument().getSelection()
 
     def createUnoService(self, service):
-        """Create UNO service"""
+        """Create UNO service
+        
+        Similar: 
+        ctx = XSCRIPTCONTEXT.getComponentContext()
+        smgr = ctx.getServiceManager()
+        sfa = smgr.createInstanceWithContext("com.sun.star.ucb.SimpleFileAccess", ctx)
+        """
         return self.ctx.ServiceManager.createInstance(service)
 
     def createUnoStruct(self, struct):
-        """Initialize without to import the class of your target struct with uno.createUnoStruct function
-
+        """Initialize without to import the class of your target struct
+        
         :param struct: target struct, "com.sun.star.awt.Point"
+        
+        Similar:
+        import uno
+        uno.createUnoStruct(struct)
         """
         return uno.createUnoStruct(struct)
 
     def filePathToUrl(self, path):
+        """Convert file path to corresponding URL. 
+        
+        Similar:
+        import uno
+        url = uno.systemPathToFileUrl(path)
+        """
         return uno.systemPathToFileUrl(path)
 
     def fileUrlToPath(self, url):
+        """Convert file UTL to corresponding path.
+        
+        Similar:
+        import uno
+        path = uno.fileUrlToSystemPath(url)
+        """
         return uno.fileUrlToSystemPath(url)
 
 # -----------------------------------------------------------
@@ -434,7 +487,7 @@ class MessageBoxWizardClass(SimpleDialog):
         # type
         dLabelType = {"PositionY": 35, "PositionX": 5, "Height": 15, "Width": 30, "Label": 'Type'}
         self.lbMsgType = self.addControl("FixedText", "lbMsgType", dLabelType)
-        mtype = [MESSAGEBOX, INFOBOX, WARNINGBOX, ERRORBOX, QUERYBOX]
+        mtype = ['MESSAGEBOX', 'INFOBOX', 'WARNINGBOX', 'ERRORBOX', 'QUERYBOX']
         dMessageType = {"PositionY": 35, "PositionX": 35, "Height": 15, "Width": 115, "Dropdown": True}
         self.cbMsgType = self.addControl("ComboBox", "cbMsgType", dMessageType)
         self.cbMsgType.StringItemList = tuple(mtype)
@@ -506,8 +559,7 @@ class MessageBoxWizardClass(SimpleDialog):
 # -----------------------------------------------------------
 
 class Gui:
-    """
-    Provides a simple dialog boxes for interaction with a user:
+    """Provides a simple dialog boxes for interaction with a user:
 
     make choices (SelectBox, OptionBox)
     enter new data (TextBox, NumberBox, DateBox)
@@ -518,60 +570,84 @@ class Gui:
     """
 
     def SelectBox(message="Select one item", title="SelectBox", choices=['a', 'b', 'c']):
-        """
+        """Simple dialog to select an item within a drop-down list.
+        
+        :param message: Message displayed to the user.
+        :param title: Window title.
+        :param choices: List containing the names of the items that can be selected.
+        :return:  A string, or None
+        
         Usage: SelectBox(message="Select one item", title="SelectBox", choices=['a','b','c'])
-
-        Return: a string, or None
         """
         app = SelectBoxClass(message, title, choices)
         app.showDialog()
         return app.returnValue
 
     def OptionBox(message="Select multiple items", title="OptionBox", choices=['a', 'b', 'c']):
-        """
+        """Show a list of possible choices to be selected.
+        
+        :param message: Message displayed to the user.
+        :param title: Window title.
+        :param choices: List containing the names of the items that can be selected.
+        :return: A tuple of selected items, or empty tuple
+        
         Usage: OptionBox(message="Select multiple items", title="OptionBox", choices=['a','b','c'])
-
-        Return: a tuple of selected items, or empty tuple
         """
         app = OptionBoxClass(message, title, choices)
         app.showDialog()
         return app.returnValue
 
     def TextBox(message="Enter your input", title="TextBox", text=""):
-        """
+        """Simple text input box.
+        
+        :param message: Message displayed to the user.
+        :param title: Window title.
+        :param text: Response from the user.
+        :return: A string, or None
+        
         Usage: TextBox(message="Enter your input", title="TextBox", text="")
-
-        Return: a string, or None
         """
         app = TextBoxClass(message, title, text)
         app.showDialog()
         return app.returnValue
 
     def NumberBox(message="Enter a number", title="NumberBox", default_value=0, min_=-10000, max_=10000, decimals=0):
-        """
+        """Simple dialog to ask a user to select an number within a certain range.
+        
+        :param message: Message displayed to the user.
+        :param title: Window title.
+        :param default_value: Default value appearing in the box.
+        :param min_: Minimum value allowed, default -10000 
+        :param max_: Maximum value allowed, default 10000
+        :param decimals: Indicate the maximum decimal precision allowed, default 0
+        :return: An integer/float or None
+        
         Usage: NumberBox(message="Enter a number", title="NumberBox", default_value=0, min_=-10000, max_=10000, decimals=0)
-
-        Return: an integer/float or None
         """
         app = NumberBoxClass(message, title, default_value, min_, max_, decimals)
         app.showDialog()
         return app.returnValue
 
     def DateBox(message="Choose a date", title='DateBox'):
-        """
+        """Calendar dialog box
+        
+        :param message: Message displayed to the user.
+        :param title: Window title.
+        :return: The selected date in format YYYYMMDD
+        
         Usage: DateBox(message="Date of birth", title="BirthDay")
-
-        Return: the selected date in format YYYYMMDD
         """
         app = DateBoxClass(message, title)
         app.showDialog()
         return app.returnValue
 
     def FolderPathBox(title='Get directory path'):
-        """
+        """Gets the full path of an existing directory
+        
+        :param title: Window title.
+        :return: The path of a directory or an empty string
+        
         Usage: FolderPathBox(title='Get directory path')
-
-        Return: the path of a directory or an empty string
         """
         ctx = ConnectOffice()
         smgr = ctx.getServiceManager()
@@ -580,11 +656,13 @@ class Gui:
         folder_picker.execute()
         return folder_picker.getDirectory()
 
-    def FilePathBox(title='Get file path', context=None):
-        """
+    def FilePathBox(title='Get file path'):
+        """Gets the full path of existing files
+        
+        :param title: Window title.
+        :return: The path of a file or an empty string
+        
         Usage: FilePathBox(title='Get file path')
-
-        Return: the path of a file or an empty string
         """
         ctx = ConnectOffice()
         smgr = ctx.getServiceManager()
@@ -595,13 +673,14 @@ class Gui:
         open_file_picker.execute()
         return open_file_picker.getSelectedFiles()[0]
 
-    def MessageBox(message="Message", title="MessageBox", messageType=INFOBOX, messageButtons=BUTTONS_OK):
-        """
+    def MessageBox(message="Message", title="MessageBox", messageType=_INFOBOX, messageButtons=_BUTTONS_OK):
+        """Simple message box.
         
-        :param title: 
-        :param messageType: 
-        :param messageButtons: 
-        :return:CANCEL = 0, OK = 1, YES = 2, NO = 3, RETRY = 4, IGNORE = 5 
+        :param message: Message displayed to the user.
+        :param title: Window title. 
+        :param messageType: Message box type
+        :param messageButtons: Message box buttons
+        :return: CANCEL = 0, OK = 1, YES = 2, NO = 3, RETRY = 4, IGNORE = 5 
  
         """
         ctx = ConnectOffice()
@@ -613,8 +692,9 @@ class Gui:
         return rval
 
     def MBWizard():
-        """
-        Allows developers to quickly generate code for message boxes.
+        """Allows developers to quickly generate code for message boxes.
+        
+        Copy generated code in your scripr.
         """
         app = MessageBoxWizardClass()
         app.showDialog()
@@ -630,6 +710,7 @@ class Inspector:
 
     """
     def __init__(self, context=None):
+        
         if context:
             self.ctx = context
         else:
@@ -643,15 +724,15 @@ class Inspector:
     def _inspectProperties(self, object):
         """Inspect properties
 
-        :param object: object to inspect
-        "param items: list method items
+        :param object: Inspect this object
+
         """
 
         P = {}
         try:
             inspector = self.introspection.inspect(object)
             # properties
-            properties = inspector.getProperties(PROPERTY_CONCEPT_ALL)
+            properties = inspector.getProperties(_PROPERTY_CONCEPT_ALL)
             for property in properties:
                 try:
                     # name
@@ -680,16 +761,16 @@ class Inspector:
         return P
 
     def _inspectMethods(self, object):
-        """Inspect Methods
+        """Inspect methods
 
-        :param object:
-        :param items; list
+        :param object: Inspect this object
+
         """
         M = {}
         try:
             inspector = self.introspection.inspect(object)
             # methods
-            methods = inspector.getMethods(METHOD_CONCEPT_ALL)
+            methods = inspector.getMethods(_METHOD_CONCEPT_ALL)
             for method in methods:
                 # name
                 m_name = str(method.Name)
@@ -714,21 +795,25 @@ class Inspector:
         return M
 
 
-    def callMRI(self, obj=None):
-        """Create an instance of MRI inspector and inspect the given object"""
+    def callMRI(self, object=None):
+        """Create an instance of MRI inspector and inspect the given object
+        
+        :param object: Inspect this object
+        """
         try:
-            if not obj:
-                obj = self.desktop.getCurrentComponent().getSelection()
+            if not object:
+                object = self.desktop.getCurrentComponent().getSelection()
             mri = self.ctx.ServiceManager.createInstance("mytools.Mri")
-            mri.inspect(obj)
+            mri.inspect(object)
         except:
             raise RuntimeException("\n MRI is not installed", self.ctx)
 
     def inspect(self, object, item=None, console='no'):
         """Inspect object
 
-        :param object: object to inspect
-        "param items: list method items
+        :param object: Inspect this object
+        :param item: Limited list of properties an methods to inspect
+        :param console: Print result to console
 
         Return properties and methods
         """
@@ -769,16 +854,6 @@ class Inspector:
         :param object:
         """
         return self.documenter.showInterfaceDoc(object)
-
-if __name__ == "__main__":
-    try:
-        office = Office()
-        inspector = Inspector()
-        print('\nConected as client to remote soffice proces\n')
-    except:
-        print('Error: no conection')
-    #Gui.MBWizard()
-
 
 
 

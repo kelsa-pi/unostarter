@@ -692,9 +692,10 @@ class Gui:
         return rval
 
     def MBWizard():
-        """Allows developers to quickly generate code for message boxes.
-        
-        Copy generated code in your scripr.
+        """Message Box wizard
+
+        Allows developers to quickly generate code for message boxes.
+        Copy generated code in your script.
         """
         app = MessageBoxWizardClass()
         app.showDialog()

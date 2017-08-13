@@ -55,6 +55,9 @@ def Run_my_project(*args):
 g_exportedScripts = Run_my_project,
 
 # Execute macro from IDE
+# Start the office from the command line eg:
+# soffice "--accept=socket,host=localhost,port=2002;urp;StarOffice.ComponentContext" --writer --norestore
+
 if __name__ == "__main__":
     import os
     import sys
